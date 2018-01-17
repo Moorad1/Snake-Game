@@ -1,0 +1,11 @@
+img {
+	width:10%;
+	float:left;
+}
+body {
+  margin:0px;
+  background:#eee ;
+  font-family:Roboto;
+  font-size:200%;
+  color:#EEE;
+}
