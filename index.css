@@ -1,6 +1,9 @@
 canvas {
-	display:block;
+	position:absoulte;
 	border:1px solid black;
-	padding:0px;
+	top:0;
+	right:0;
+	left:0;
+	down:0;
 	margin:auto;
 }
