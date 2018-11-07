@@ -3,7 +3,7 @@ const gamepad = new Gamepad();
 var canvas = document.getElementById('canvas');
 var ctx = canvas.getContext('2d');
 // eslint-disable-next-line no-undef
-var socket = io('localhost:4000');
+var socket = io('snake-ppohplasdm.now.sh');
 var size = 36;
 var themes = [{
 	bg: '#0291ff',
