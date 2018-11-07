@@ -1,6 +1,11 @@
+html, body {
+	background:#FEFEFE;
+}
+
 canvas {
-	position:absolute;
+	position: absolute;
 	border:1px solid black;
+	padding:0px;
 	top:0;
 	right:0;
 	left:0;
