@@ -61,7 +61,7 @@ var food = {
 	random: Math.floor(Math.random() * 100)
 };
 var dir = 'down';
-var score = 191;
+var score = 0;
 var bgColour = themes[0].bg;
 var snakeColour = themes[0].snake;
 var mainMenu = true;
