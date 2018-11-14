@@ -2,9 +2,11 @@ const gamepad = new Gamepad();
 
 var canvas = document.getElementById('canvas');
 var ctx = canvas.getContext('2d');
+var input = document.getElementById('input');
 // eslint-disable-next-line no-undef
-var socket = io('snake-ppohplasdm.now.sh');
+var socket = io('snake-zjkzhcfxsc.now.sh');
 var size = 36;
+var oscore = 0;
 var themes = [{
 	bg: '#0291ff',
 	snake: '#0165b2',
@@ -47,21 +49,29 @@ var snake = [{
 	y: 238
 }];
 
+var mMLeaderboard = {
+	scores:[],
+	names:[]
+};
+
+var user =	true;
 var food = {
 	x: Math.floor(Math.random() * (canvas.width / size)) * size,
 	y: Math.floor(Math.random() * (canvas.height / size)) * size,
 	random: Math.floor(Math.random() * 100)
 };
 var dir = 'down';
-var score = 0;
+var score = 191;
 var bgColour = themes[0].bg;
 var snakeColour = themes[0].snake;
 var mainMenu = true;
 var logo = new Image();
 var currentTheme = 0;
+var leaderboard = false;
 var opacity = {
 	sp: '00',
-	mp: '00'
+	mp: '00',
+	lb: '00'
 };
 var multiplayer = false;
 var players = [];
@@ -71,19 +81,19 @@ setInterval(update, 100);
 
 
 gamepad.on('press', 'd_pad_right', () => {
-    dir = (dir != 'left') ? 'right' : 'left';
+	dir = (dir != 'left') ? 'right' : 'left';
 });
 
 gamepad.on('press', 'd_pad_left', () => {
-    dir = (dir != 'right') ? 'left' : 'right';
+	dir = (dir != 'right') ? 'left' : 'right';
 });
 
 gamepad.on('press', 'd_pad_up', () => {
-    dir = (dir != 'down') ? 'up' : 'down';
+	dir = (dir != 'down') ? 'up' : 'down';
 });
 
 gamepad.on('press', 'd_pad_down', () => {
-    dir = (dir != 'up') ? 'down' : 'up';
+	dir = (dir != 'up') ? 'down' : 'up';
 });
 
 gamepad.on('press', 'shoulder_top_right', () => {
@@ -91,34 +101,44 @@ gamepad.on('press', 'shoulder_top_right', () => {
 	theme(currentTheme % themes.length);
 });
 
+// input.addEventListener('change', () => {
+// 	user = false;
+// 	input.style.display = 'none';
+// })
+
 canvas.addEventListener('click', function (ev) {
 	var mx = ev.offsetX;
 	var my = ev.offsetY;
-	console.log(mx + ' : ' + my);
-
-	if ((canvas.width / 2) - 150 <= mx && mx <= ((canvas.width / 2) - 150) + 300 && (canvas.height / 3) + 25 <= my && my <= (canvas.height / 3) + 75) {
-		snake = [{
-			x: 144,
-			y: 144
-		}];
-		dir = 'none';
-		food = {
-			x: Math.floor(Math.random() * (canvas.width / size)) * size,
-			y: Math.floor(Math.random() * (canvas.height / size)) * size
-		};
-		mainMenu = false;
-	} else if (((canvas.width / 2) - 150 <= mx && mx <= ((canvas.width / 2) - 150) + 300 && (canvas.height / 3) + 100 <= my && my <= (canvas.height / 3) + 150)) {
-		snake = [{
-			x: 144,
-			y: 144
-		}];
-		dir = 'none';
-		food = {
-			x: Math.floor(Math.random() * (canvas.width / size)) * size,
-			y: Math.floor(Math.random() * (canvas.height / size)) * size
-		};
-		mainMenu = false;
-		multiplayer = true;
+	if (mainMenu) {
+		if ((canvas.width / 2) - 150 <= mx && mx <= ((canvas.width / 2) - 150) + 300 && (canvas.height / 3) + 25 <= my && my <= (canvas.height / 3) + 75) {
+			snake = [{
+				x: 144,
+				y: 144
+			}];
+			dir = 'none';
+			food = {
+				x: Math.floor(Math.random() * (canvas.width / size)) * size,
+				y: Math.floor(Math.random() * (canvas.height / size)) * size
+			};
+			mainMenu = false;
+		} else if (((canvas.width / 2) - 150 <= mx && mx <= ((canvas.width / 2) - 150) + 300 && (canvas.height / 3) + 100 <= my && my <= (canvas.height / 3) + 150)) {
+			snake = [{
+				x: 144,
+				y: 144
+			}];
+			dir = 'none';
+			food = {
+				x: Math.floor(Math.random() * (canvas.width / size)) * size,
+				y: Math.floor(Math.random() * (canvas.height / size)) * size
+			};
+			mainMenu = false;
+			multiplayer = true;
+		} else if ((((canvas.width / 2) - 150 <= mx && mx <= ((canvas.width / 2) - 150) + 300 && (canvas.height / 3) + 100 <= my && my <= (canvas.height / 3) + 225))) {
+			leaderboard = true;
+			mainMenu = false;
+		}
+	} else if (leaderboard) {
+		//if (mx)
 	}
 });
 
@@ -136,21 +156,27 @@ canvas.addEventListener('mousemove', function (ev) {
 	} else {
 		opacity.mp = '00';
 	}
+
+	if (((canvas.width / 2) - 150 <= moveX && moveX <= ((canvas.width / 2) - 150) + 300 && (canvas.height / 3) + 175 <= moveY && moveY <= (canvas.height / 3) + 225)) {
+		opacity.lb = '60';
+	} else {
+		opacity.lb = '00';
+	}
 });
 
-
+canvas.addEventListener('keydown', keyboard);
 
 function update() {
-	if (mainMenu) {
+	if (mainMenu || leaderboard) {
 		randomControls();
 		wrappingCollision();
 	}
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 	ctx.fillStyle = bgColour;
 	ctx.fillRect(0, 0, canvas.width, canvas.height);
-	if (!mainMenu) {
+	if (!mainMenu && !leaderboard) {
 		ctx.fillStyle = themes[currentTheme % themes.length].snake + '60';
-		ctx.font = (100 + (score * 5)) + 'px Arial';
+		ctx.font = (100 + score + 'px Arial');
 		ctx.textAlign = 'right';
 		ctx.fillText(score, canvas.width - 10, canvas.height - 15);
 	}
@@ -175,12 +201,23 @@ function update() {
 	}
 
 	if (multiplayer) {
+		// if (user) {
+		// 	input.style.display = 'initial';
+		// 	canvas.removeEventListener('keydown',keyboard,true);
+
+		//} else {
+		if (score > oscore && multiplier <= 1 && score >= mMLeaderboard.scores[9]) {
+			socket.emit('scores', {score:score,name:'player'+Math.floor(Math.random()*9999)});
+			console.log('Sent : '+score);
+			oscore = score;
+		}
 		size = 36 / (1 + players.length);
 		for (var e = 0; e < players.length; e++) {
 			for (var d = 0; d < players[e].length; d++) {
 				ctx.fillRect(players[e][d].x, players[e][d].y, size, size);
 			}
 		}
+		//}
 	} else if (!multiplayer) {
 		size = 36;
 	}
@@ -192,13 +229,11 @@ function update() {
 		ctx.fillStyle = '#17ed77';
 	}
 	ctx.fillRect(food.x, food.y, size, size);
-	console.log(multiplier);
 	var oldSnakeX = snake[0].x;
 	var oldSnakeY = snake[0].y;
 	if ((oldSnakeX == food.x && oldSnakeY == food.y) || multiplier > 1) {
 		multiplier--;
 		if ((oldSnakeX == food.x && oldSnakeY == food.y)) {
-			console.log('Chance: ' + food.random);
 			if (food.random == 49 || food.random == 68) {
 				multiplier = 12;
 			} else if (food.random % 10 == 0) {
@@ -232,7 +267,7 @@ function update() {
 	});
 
 
-	if (!mainMenu) {
+	if (!mainMenu && !leaderboard) {
 		collision();
 	}
 
@@ -250,11 +285,26 @@ function update() {
 		ctx.fillStyle = '#FFFFFF' + opacity.mp;
 		ctx.strokeRect((canvas.width / 2) - 150, (canvas.height / 3) + 100, 300, 50);
 		ctx.fillRect((canvas.width / 2) - 150, (canvas.height / 3) + 100, 300, 50);
+		ctx.fillStyle = '#FFFFFF' + opacity.lb;
+		ctx.strokeRect((canvas.width / 2) - 150, (canvas.height / 3) + 175, 300, 50);
+		ctx.fillRect((canvas.width / 2) - 150, (canvas.height / 3) + 175, 300, 50);
 		ctx.fillStyle = '#ffffff';
 		ctx.font = '30px Arial';
 		ctx.textAlign = 'center';
 		ctx.fillText('Singleplayer', (canvas.width / 2), (canvas.height / 3) + 60);
 		ctx.fillText('Multiplayer', (canvas.width / 2), (canvas.height / 3) + 135);
+		ctx.fillText('Leaderboard', (canvas.width / 2), (canvas.height / 3) + 210);
+	} else if (leaderboard) {
+		ctx.fillStyle = 'white';
+		ctx.font = '30px Arial';
+		ctx.textAlign = 'center';
+		ctx.fillText('Highest People Ever!',(canvas.width / 2), (canvas.height / 3) - 150);
+		ctx.textAlign = 'left';
+		
+		for (var x = 0;x < mMLeaderboard.scores.length;x ++) {
+			ctx.fillText(`${x+1}.${mMLeaderboard.names[x]}`,(canvas.width / 2) - 200, (canvas.height / 3) + (x-2)*50);
+			ctx.fillText(mMLeaderboard.scores[x],(canvas.width / 2) + 100, (canvas.height / 3) + (x-2)*50);
+		}
 	}
 }
 
@@ -262,24 +312,6 @@ function theme(index) {
 	bgColour = themes[index].bg;
 	snakeColour = themes[index].snake;
 }
-
-document.onkeydown = function (e) {
-	if (!mainMenu) {
-		if (e.keyCode == 38 && !(dir == 'down')) {
-			dir = 'up';
-		} else if (e.keyCode == 40 && !(dir == 'up')) {
-			dir = 'down';
-		} else if (e.keyCode == 37 && !(dir == 'right')) {
-			dir = 'left';
-		} else if (e.keyCode == 39 && !(dir == 'left')) {
-			dir = 'right';
-		}
-	}
-	if (e.keyCode == 84) {
-		currentTheme++;
-		theme(currentTheme % themes.length);
-	}
-};
 
 function randomControls() {
 	var control = Math.floor(Math.random() * 25);
@@ -305,8 +337,8 @@ function restart() {
 	};
 	dir = 'none';
 	score = 0;
-	console.log('Restarted');
 	score = 0;
+	multiplier = 0;
 }
 
 function wrappingCollision() {
@@ -362,12 +394,10 @@ function processPlayer(data) {
 }
 
 socket.on('players', function (data) {
-	console.log(data);
 	processPlayer(data);
 });
 
 socket.on('delPlayer', function (data) {
-	console.log('connection Lost');
 	for (var o = 0; o < players.length; o++) {
 		if (players[o][1] == data) {
 			players.splice(o, 1);
@@ -375,3 +405,49 @@ socket.on('delPlayer', function (data) {
 		}
 	}
 });
+
+socket.on('scores', function (data) {
+	mMLeaderboard.scores = data.scores;
+	mMLeaderboard.names = data.names;
+	console.log(data)
+});
+
+var keyboard = (e) => {
+	console.log('Keys')
+	if (!mainMenu && !user) {
+		if (e.keyCode == 38 && !(dir == 'down')) {
+			dir = 'up';
+		} else if (e.keyCode == 40 && !(dir == 'up')) {
+			dir = 'down';
+		} else if (e.keyCode == 37 && !(dir == 'right')) {
+			dir = 'left';
+		} else if (e.keyCode == 39 && !(dir == 'left')) {
+			dir = 'right';
+		} else if (e.keyCode == 27) {
+			mainMenu = true;
+			leaderboard = false;
+			multiplayer = false;
+			user = true;
+			snake = [{
+				x: 144,
+				y: 144,
+			}, {
+				x: 144,
+				y: 170
+			}, {
+				x: 170,
+				y: 170
+			}, {
+				x: 170,
+				y: 204
+			}, {
+				x: 170,
+				y: 238
+			}];
+		}
+	}
+	if (e.keyCode == 84) {
+		currentTheme++;
+		theme(currentTheme % themes.length);
+	}
+}
