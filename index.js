@@ -7,6 +7,7 @@ var input = document.getElementById('input');
 var socket = io('snake-zjkzhcfxsc.now.sh');
 var size = 36;
 var oscore = 0;
+var name = 'player'+Math.floor(Math.random()*9999)
 var themes = [{
 	bg: '#0291ff',
 	snake: '#0165b2',
@@ -207,7 +208,7 @@ function update() {
 
 		//} else {
 		if (score > oscore && multiplier <= 1 && score >= mMLeaderboard.scores[9]) {
-			socket.emit('scores', {score:score,name:'player'+Math.floor(Math.random()*9999)});
+			socket.emit('scores', {score:score,name:name});
 			console.log('Sent : '+score);
 			oscore = score;
 		}
